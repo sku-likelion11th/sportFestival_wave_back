@@ -7,10 +7,10 @@ class User(Base):
     __tablename__ = 'user'
     
     id = Column(Integer, primary_key=True)
-    email = Column(String, nullable=False)
+    email = Column(String(255), nullable=False)
     student_num = Column(Integer, nullable=False)
-    name = Column(String, nullable=False)
-    phone_num = Column(Integer, nullable=False)
+    name = Column(String(255), nullable=False)
+    phone_num = Column(String(255), nullable=False)
     is_admin = Column(Boolean, nullable=False, default=False)
     games = Column(JSON, nullable=True)
     
@@ -21,19 +21,22 @@ class Game(Base):
     id = Column(Integer, primary_key=True)
     start_time = Column(DateTime, nullable=False)
     result = Column(Boolean, nullable=True)
-    video_url = Column(String, nullable=False)           
-    score_A = Column(Integer, primary_key=True)    
-    score_B = Column(Integer, primary_key=True)  
-    place = Column(String, nullable=False)
-    team_A = Column(String, nullable=False)
-    team_B = Column(String, nullable=False)
-    category = Column(String, nullable=False)
+    video_url = Column(String(255), nullable=False)           
+    score_A = Column(Integer)    
+    score_B = Column(Integer)  
+    place = Column(String(255), nullable=False)
+    team_A = Column(String(255), nullable=False)
+    team_B = Column(String(255), nullable=False)
+    category = Column(String(255), nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"))
     
     user = relationship("User", backref="game")
     
 
 class Major(Base):
-    name = Column(String, primary_key=True, nullable=False)
+    __tablename__ = 'major'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
     slogan = Column(Text, nullable=False)
     image = Column(Text, nullable=False) # How to show the image(by statics?)
