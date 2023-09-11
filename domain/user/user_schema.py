@@ -1,5 +1,5 @@
 import datetime
-
+from typing import Dict, Any
 from pydantic import BaseModel
 
 
@@ -10,7 +10,7 @@ class User(BaseModel):
     name: str 
     phone_num: str 
     is_admin: bool 
-    # game은 어떻게 할지 몰라서 안넣음
+    game: Dict
     
     class Config:
         from_attribute = True
