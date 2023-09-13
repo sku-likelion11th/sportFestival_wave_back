@@ -8,9 +8,9 @@ class User(Base):
     
     id = Column(Integer, primary_key=True)
     email = Column(String(255), nullable=False)
-    student_num = Column(Integer, nullable=False)
-    name = Column(String(255), nullable=False)
-    phone_num = Column(String(255), nullable=False)
+    student_num = Column(Integer, nullable=True)
+    name = Column(String(255), nullable=True)
+    phone_num = Column(String(255), nullable=True)
     is_admin = Column(Boolean, nullable=False, default=False)
     games = Column(JSON, nullable=True)
     
