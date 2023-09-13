@@ -28,5 +28,5 @@ models.Base.metadata.create_all(bind=engine) # create all tables in models.py on
 
 app.include_router(auth_router.router)
 app.include_router(user_router.router)
-app.include_router(game_router.router)
-app.include_router(major_router.router)
+# app.include_router(game_router.router)
+# app.include_router(major_router.router)

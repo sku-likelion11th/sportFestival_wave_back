@@ -10,7 +10,7 @@ class User(BaseModel):
     name: str 
     phone_num: str 
     is_admin: bool 
-    game: Dict[str, Any] = {}
+    games: Dict[str, Any] = {}
     
     class Config:
         from_attribute = True
