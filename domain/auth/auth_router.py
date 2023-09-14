@@ -40,7 +40,7 @@ async def homepage(request: Request):
 @router.get('/login')
 async def login(request: Request):
     redirect_uri = request.url_for('auth')
-    return await oauth.google.authorize_redirect(request, redirect_uri)#, prompt='select_account')
+    return await oauth.google.authorize_redirect(request, redirect_uri, prompt='select_account')
 
 
 @router.get('/auth')
