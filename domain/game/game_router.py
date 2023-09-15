@@ -8,6 +8,10 @@ router = APIRouter(
     prefix="/game",
 )
 
+major = {
+    "컴공" : "image_url"
+}
+
 
 # @router.get("/list")
 # def game_list(db: Session = Depends(get_db), response_model=list[game_schema.Game]):

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 from database import get_db
 from domain.user import user_schema, user_crud
 from domain.game import game_schema
@@ -28,10 +29,11 @@ router = APIRouter(
 #         return HTMLResponse('no_user_detail')#RedirectResponse(url='/')
 #     return user
 
+from domain.auth.auth_router import auth_google
 
 @router.post('/info')
 async def user_change(request: Request, user_data: user_schema.User, db: Session = Depends(get_db)):
-    user = request.session.get('user')
+    user = await auth_google(request.session.get('user'))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
     userdb = db.query(User).filter_by(email=user["email"]).first()
@@ -44,7 +46,7 @@ async def user_change(request: Request, user_data: user_schema.User, db: Session
     
 @router.get('/info')
 async def user_info(request: Request, db: Session = Depends(get_db)):#, response_model=list[user_schema.User]):
-    user = request.session.get('user')
+    user = await auth_google(request.session.get('user'))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
     userdb = db.query(User).filter_by(email=user["email"]).first()
@@ -57,7 +59,7 @@ async def user_info(request: Request, db: Session = Depends(get_db)):#, response
 
 @router.get('/game')
 async def user_game(request: Request, db:Session = Depends(get_db)):
-    user = request.session.get('user')
+    user = await auth_google(request.session.get('user'))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
     userdb = db.query(User).filter_by(email=user["email"]).first()
@@ -68,21 +70,17 @@ async def user_game(request: Request, db:Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="사용자를 찾을 수 없음")
     
 
-# @router.post('/game')
-# async def user_game(request: Request, game_data=game_schema.Game ,db:Session = Depends(get_db)):
-#     user = request.session.get('user')
-#     if not user:
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
-#     userdb = db.query(User).filter_by(email=user["email"]).first()
-#     if userdb:
-#         games = userdb.games
-#         if games:
-#             # update game JSON object
-#             pass
-#         else:
-#             # create a new game JSON object
-#             pass
-    
-#         return games
-#     else:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="사용자를 찾을 수 없음")
+@router.post('/game')
+async def user_game(request: Request, category: str, select: str, db:Session = Depends(get_db)):
+    user = await auth_google(request.session.get('user'))
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
+    userdb = db.query(User).filter_by(email=user["email"]).first()
+    if userdb:
+        userdb.games[category] = select
+        flag_modified(userdb, "games")
+        db.add(userdb)
+        db.commit()
+        return userdb.games
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="사용자를 찾을 수 없음")

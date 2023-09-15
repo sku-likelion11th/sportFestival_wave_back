@@ -1,3 +1,41 @@
+# # auth/routes.py
+
+# from fastapi import APIRouter, Depends
+# from .models import User, UserCreate, UserRead, UserUpdate
+# from .libs import auth_backend, current_active_user, fastapi_users
+
+# router = APIRouter()
+
+# get_auth_router = fastapi_users.get_auth_router(auth_backend)
+# get_register_router = fastapi_users.get_register_router(UserRead, UserCreate)
+# get_reset_password_router = fastapi_users.get_reset_password_router()
+# get_verify_router = fastapi_users.get_verify_router(UserRead)
+# get_users_router = fastapi_users.get_users_router(UserRead, UserUpdate)
+
+# routers = [
+#     (router, dict(prefix="/auth", tags=["auth"])),
+#     (get_auth_router, dict(prefix="/auth/jwt", tags=["auth"])),
+#     (get_register_router, dict(prefix="/auth", tags=["auth"])),
+#     (get_reset_password_router, dict(prefix="/auth", tags=["auth"])),
+#     (get_verify_router, dict(prefix="/auth", tags=["auth"])),
+#     (get_users_router, dict(prefix="/users", tags=["users"])),
+# ]
+
+# @router.get("/authenticated-route")
+# async def authenticated_route(user: User = Depends(current_active_user)):
+#     return {"message": f"Hello {user.email}!"}
+
+
+
+
+
+
+
+
+
+
+
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
@@ -23,15 +61,40 @@ oauth.register(
     }
 )
 
+
+
+from google.oauth2 import id_token
+import google
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
+@router.get('/google')
+async def auth_google(token:str):
+    try:
+        idinfo = id_token.verify_oauth2_token(token, google.auth.transport.requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
+        return idinfo
+    except ValueError:
+        return None
+    # 클라이언트를 사용하여 토큰을 검증합니다.
+
+
+
+
+
+
 @router.get('/')
 async def homepage(request: Request):
     # 로그인한 유저가 있다면
-    user = request.session.get('user')
-    print(user)
+    user = None
+    try:
+        user = await auth_google(request.session.get('user'))
+    except Exception:
+        pass
     if user:
-        data = json.dumps(user)
+        # data = json.dumps(user)
         html = (
-            f'<pre>{data}</pre>'
+            f'<pre>{user}</pre>'
             '<a href="/logout">logout</a>'
         )
         return HTMLResponse(html)
@@ -56,11 +119,15 @@ async def auth(request: Request, db: Session = Depends(get_db)):
         if user['hd'] != "sungkyul.ac.kr":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized email domain.")
         # 로그인한 유저 정보를 세션에 할당
-        request.session['user'] = user
+        request.session['user'] = token['id_token']
         existing_user = user_crud.get_user_by_email(db, email=user['email'])
-
+        
         if not existing_user:
             new_user = User(email=user['email'], name=user['name'])
+            new_user.games = {
+                "soccor": None,
+                "basketball": None
+            }
             db.add(new_user)
             db.commit()
 
@@ -71,3 +138,19 @@ async def logout(request: Request):
     # 세션에서 유저 정보 삭제
     request.session.pop('user', None)
     return RedirectResponse(url='/')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
