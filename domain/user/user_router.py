@@ -98,4 +98,13 @@ async def winpr_ratio(category:str, db: Session = Depends(get_db)):
     return result
 
 
+async def is_admin(db, token:str):
+    user = await auth_google(token)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
+    userdb = await user_crud.get_user(db,user['email'])
+    if userdb:
+        return userdb.is_admin
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="사용자를 찾을 수 없음")
 

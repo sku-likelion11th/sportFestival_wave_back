@@ -11,3 +11,4 @@ async def get_user_list(db: Session):
 async def get_user(db: Session, email: str):
     user = db.query(User).get(email)
     return user
+
