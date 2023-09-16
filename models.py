@@ -6,9 +6,8 @@ from database import Base
 class User(Base):
     __tablename__ = 'user'
     
-    id = Column(Integer, primary_key=True)
-    email = Column(String(255), nullable=False)
-    student_num = Column(Integer, nullable=True)
+    email = Column(String(255), primary_key=True)
+    student_num = Column(String(8), nullable=True)
     name = Column(String(255), nullable=True)
     phone_num = Column(String(255), nullable=True)
     is_admin = Column(Boolean, nullable=False, default=False)

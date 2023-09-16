@@ -15,13 +15,13 @@ major = {
 
 @router.get("/list")
 async def game_dict(db: Session = Depends(get_db)):
-    _game_list = game_crud.get_game_dict(db)
-    return _game_list
+    game_dict = await game_crud.get_game_dict(db)
+    return game_dict
 
 
 @router.get("/{category}")
 async def game_detail(category: str, db: Session = Depends(get_db)):
-    game = game_crud.get_game(db, category)
+    game = await game_crud.get_game(db, category)
     return game
 
 @router.post("/{category}")
@@ -30,3 +30,4 @@ async def game_status_change(category:str, game_score: game_schema.Game_score, d
     await game_crud.change_game(db, game, game_score)
     db.refresh(game)
     return game
+

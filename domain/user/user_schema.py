@@ -4,9 +4,8 @@ from pydantic import BaseModel, validator
 
 
 class User(BaseModel):
-    id: int 
     email: str 
-    student_num: int 
+    student_num: str
     name: str 
     phone_num: str 
     is_admin: bool 

@@ -36,7 +36,7 @@ async def user_change(request: Request, user_data: user_schema.User, db: Session
     user = await auth_google(request.session.get('user'))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
-    userdb = db.query(User).filter_by(email=user["email"]).first()
+    userdb = user_crud.get_user(db,user['email'])
     userdb.student_num = user_data.student_num
     userdb.phone_num = user_data.phone_num
 
@@ -49,7 +49,7 @@ async def user_info(request: Request, db: Session = Depends(get_db)):#, response
     user = await auth_google(request.session.get('user'))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
-    userdb = db.query(User).filter_by(email=user["email"]).first()
+    userdb = await user_crud.get_user(db,user['email'])
 
     if userdb:
         return userdb.__dict__ # 모든 column 출력
@@ -62,8 +62,7 @@ async def user_game(request: Request, db:Session = Depends(get_db)):
     user = await auth_google(request.session.get('user'))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
-    userdb = db.query(User).filter_by(email=user["email"]).first()
-    
+    userdb = await user_crud.get_user(db,user['email'])
     if userdb:
         return userdb.games
     else:
@@ -75,7 +74,7 @@ async def user_game(request: Request, category: str, select: str, db:Session = D
     user = await auth_google(request.session.get('user'))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
-    userdb = db.query(User).filter_by(email=user["email"]).first()
+    userdb = await user_crud.get_user(db,user['email'])
     if userdb:
         userdb.games[category] = select
         flag_modified(userdb, "games")
@@ -84,3 +83,19 @@ async def user_game(request: Request, category: str, select: str, db:Session = D
         return userdb.games
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="사용자를 찾을 수 없음")
+    
+    
+@router.get('/ratio/{category}')
+async def winpr_ratio(category:str, db: Session = Depends(get_db)):
+    users = await user_crud.get_user_list(db)
+    result = {}
+    for user in users:
+        if user.games[category]:
+            try:
+                result[user.games[category]]+=1
+            except:
+                result[user.games[category]]=1
+    return result
+
+
+

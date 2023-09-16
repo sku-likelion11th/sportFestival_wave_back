@@ -120,7 +120,7 @@ async def auth(request: Request, db: Session = Depends(get_db)):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized email domain.")
         # 로그인한 유저 정보를 세션에 할당
         request.session['user'] = token['id_token']
-        existing_user = user_crud.get_user_by_email(db, email=user['email'])
+        existing_user = await user_crud.get_user(db, user['email'])
         
         if not existing_user:
             new_user = User(email=user['email'], name=user['name'])
