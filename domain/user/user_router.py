@@ -76,6 +76,8 @@ async def user_game(request: Request, category: str, select: str, db:Session = D
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
     userdb = await user_crud.get_user(db,user['email'])
     if userdb:
+        if (not userdb.student_num) or (not userdb.phone_num):
+            return {"message":"학번과 전화번호 입력해주세요"}
         userdb.games[category] = select
         flag_modified(userdb, "games")
         db.add(userdb)
