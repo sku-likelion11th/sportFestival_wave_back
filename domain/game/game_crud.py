@@ -1,14 +1,23 @@
 from models import Game
+from domain.game import game_schema
 from sqlalchemy.orm import Session
 
 
-def get_game_list(db: Session):
+async def get_game_dict(db: Session):
     game_list = db.query(Game)\
-        .order_by(Game.id.desc())\
         .all()
-    return game_list
+    game_dict = {game.category:game for game in game_list}
+    return game_dict
 
 
-def get_game(db: Session, game_id: int):
-    game = db.query(Game).get(game_id)
+async def get_game(db: Session, category: str):
+    game = db.query(Game).get(category)
+    return game
+
+
+async def change_game(db: Session, game:Game, game_score:game_schema.Game_score):
+    game.result = game_score.result
+    game.score_A = game_score.score_A
+    game.score_B = game_score.score_B
+    db.commit()
     return game

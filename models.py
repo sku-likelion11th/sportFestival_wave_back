@@ -18,19 +18,17 @@ class User(Base):
 class Game(Base):
     __tablename__ = 'game'
     
-    id = Column(Integer, primary_key=True)
+    category = Column(String(255), primary_key=True)
     start_time = Column(DateTime, nullable=False)
     result = Column(Boolean, nullable=True)
-    video_url = Column(String(255), nullable=False)           
+    video_url = Column(String(255), nullable=True)           
     score_A = Column(Integer)    
     score_B = Column(Integer)  
     place = Column(String(255), nullable=False)
     team_A = Column(String(255), nullable=False)
     team_B = Column(String(255), nullable=False)
-    category = Column(String(255), nullable=False)
-    user_id = Column(Integer, ForeignKey("user.id"))
+
     
-    user = relationship("User", backref="game")
     
 
 class Major(Base):

@@ -9,17 +9,24 @@ router = APIRouter(
 )
 
 major = {
-    "컴공" : "image_url"
+    "컴공" : "컴공image_url"
 }
 
 
-# @router.get("/list")
-# def game_list(db: Session = Depends(get_db), response_model=list[game_schema.Game]):
-#     _game_list = game_crud.get_game_list(db)
-#     return _game_list
+@router.get("/list")
+async def game_dict(db: Session = Depends(get_db)):
+    _game_list = game_crud.get_game_dict(db)
+    return _game_list
 
 
-# @router.get("/detail/{game_id}", response_model=game_schema.Game)
-# def game_detail(game_id: int, db: Session = Depends(get_db)):
-#     game = game_crud.get_game(db, game_id=game_id)
-#     return game
+@router.get("/{category}")
+async def game_detail(category: str, db: Session = Depends(get_db)):
+    game = game_crud.get_game(db, category)
+    return game
+
+@router.post("/{category}")
+async def game_status_change(category:str, game_score: game_schema.Game_score, db: Session = Depends(get_db)):
+    game = await game_crud.get_game(db, category)
+    await game_crud.change_game(db, game, game_score)
+    db.refresh(game)
+    return game
