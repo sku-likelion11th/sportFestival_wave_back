@@ -83,7 +83,7 @@ async def decode_jwt(token: str):
     payload = jwt.decode(token, os.environ["JWT_KEY"], 'HS256')
     return payload
 
-
+@router.get('/validation')
 async def token_validation(request: Request, db: Session = Depends(get_db)): # have to use every each function
     token = request.session.get('token')
     if token:
@@ -197,19 +197,4 @@ async def logout(user_token: str , db: Session = Depends(get_db)): # have to sen
     db.commit()
 
     return {'message': 'logged out'}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
