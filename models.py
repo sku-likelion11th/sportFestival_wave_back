@@ -12,6 +12,8 @@ class User(Base):
     phone_num = Column(String(255), nullable=True)
     is_admin = Column(Boolean, nullable=False, default=False)
     games = Column(JSON, nullable=True)
+
+    session = Column(Text, nullable=True)
     
 
 class Game(Base):

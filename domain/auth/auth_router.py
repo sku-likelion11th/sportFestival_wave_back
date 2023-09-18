@@ -26,12 +26,14 @@
 #     return {"message": f"Hello {user.email}!"}
 
 
+from datetime import datetime, timedelta
+from typing import Union, Any
+from jose import jwt
 
 
-
-
-
-
+async def decode_jwt(token: str):
+    payload = jwt.decode(token, os.environ["JWT_KEY"], 'HS256')
+    return payload
 
 
 
@@ -79,8 +81,16 @@ async def auth_google(token:str):
     # 클라이언트를 사용하여 토큰을 검증합니다.
 
 
+payload = {
+    'status': '',
+    'data': '',
+    'message': ''
+}
 
-
+_user = {
+    'email': '',
+    'expire': ''
+}
 
 
 @router.get('/')
@@ -111,7 +121,7 @@ async def auth(request: Request, db: Session = Depends(get_db)):
     try:
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as error:
-        return HTMLResponse(f'<h1>{error.error}</h1>')
+        return {'error': 'authorization error'}
     
     user = token.get('userinfo')
     if user:
@@ -119,25 +129,39 @@ async def auth(request: Request, db: Session = Depends(get_db)):
         if user['hd'] != "sungkyul.ac.kr":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized email domain.")
         # 로그인한 유저 정보를 세션에 할당
-        request.session['user'] = token['id_token']
+        # request.session['user'] = token['id_token'] # have to return JSON to Client side(React)
+        _user['email'] = user['email']
+        expire_time = datetime.utcnow() + timedelta(hours=10) # korean time + 1hour
+        _user['expire'] = expire_time.strftime("%Y-%m-%d %H:%M:%S")
+        encoded_jwt = jwt.encode(_user, os.environ["JWT_KEY"], 'HS256')
+
         existing_user = await user_crud.get_user(db, user['email'])
         
         if not existing_user:
-            new_user = User(email=user['email'], name=user['name'])
-            new_user.games = {
-                "soccor": None,
-                "basketball": None
-            }
+            new_user = User(email=user['email'], name=user['name'], session=encoded_jwt)
+            # new_user.games = { # insert games(JSON) like this.
+            #     "soccor": None,
+            #     "basketball": None
+            # }
+
             db.add(new_user)
             db.commit()
 
-    return RedirectResponse(url='/')
+        
+    return {'token': encoded_jwt}
 
-@router.get('/logout')
-async def logout(request: Request):
+@router.post('/logout')
+async def logout(user_token: str , db: Session = Depends(get_db)): # have to send session data to backend (from front(React)) # request: Request
     # 세션에서 유저 정보 삭제
-    request.session.pop('user', None)
-    return RedirectResponse(url='/')
+    # request.session.pop('user', None)
+    # user_token = request.session.get('token')
+    user_info = await decode_jwt(user_token)
+    user = await user_crud.get_user(db, user_info['email'])
+    user.session = '' # erase user.session
+    db.add(user)
+    db.commit()
+
+    return {'message': 'logged out'}
 
 
 
