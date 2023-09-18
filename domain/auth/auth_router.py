@@ -26,14 +26,10 @@
 #     return {"message": f"Hello {user.email}!"}
 
 
-from datetime import datetime, timedelta
-from typing import Union, Any
-from jose import jwt
 
 
-async def decode_jwt(token: str):
-    payload = jwt.decode(token, os.environ["JWT_KEY"], 'HS256')
-    return payload
+
+
 
 
 
@@ -50,6 +46,14 @@ from starlette.responses import HTMLResponse, RedirectResponse
 import json
 from fastapi.security import OAuth2PasswordBearer#, OAuthError
 from fastapi.security.oauth2 import OAuth2PasswordBearer
+from datetime import datetime, timedelta
+from typing import Union, Any
+from jose import jwt
+from google.oauth2 import id_token
+import google
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 router = APIRouter()
 
@@ -65,14 +69,8 @@ oauth.register(
 
 
 
-from google.oauth2 import id_token
-import google
-from dotenv import load_dotenv
-import os
-load_dotenv()
-
 @router.get('/google')
-async def auth_google(token:str):
+async def auth_google(token:str): # not router but function?
     try:
         idinfo = id_token.verify_oauth2_token(token, google.auth.transport.requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
         return idinfo
@@ -81,34 +79,56 @@ async def auth_google(token:str):
     # 클라이언트를 사용하여 토큰을 검증합니다.
 
 
-payload = {
-    'status': '',
-    'data': '',
-    'message': ''
-}
+async def decode_jwt(token: str):
+    payload = jwt.decode(token, os.environ["JWT_KEY"], 'HS256')
+    return payload
 
-_user = {
-    'email': '',
-    'expire': ''
-}
+
+async def token_validation(request: Request, db: Session = Depends(get_db)): # have to use every each function
+    token = request.session.get('token')
+    if token:
+        payload = await decode_jwt(token)
+        user = await user_crud.get_user(db, payload['email'])
+        if user:
+            if datetime.now() <= user['expire']:
+                # data = json.dumps(user)
+                return {
+                        'validation': True
+                        }
+            else:
+                return {
+                        'validation': False,
+                        'message': 'expired'
+                        }
+        else:
+            return {
+                    'validation': False, 
+                    'message': 'no data'
+                    }
+    else:
+        return {
+                'validation': False, 
+                'message': 'not logged in'
+                }
 
 
 @router.get('/')
-async def homepage(request: Request):
+async def homepage(request: Request, db: Session = Depends(get_db)):
     # 로그인한 유저가 있다면
-    user = None
-    try:
-        user = await auth_google(request.session.get('user'))
-    except Exception:
-        pass
-    if user:
-        # data = json.dumps(user)
-        html = (
-            f'<pre>{user}</pre>'
-            '<a href="/logout">logout</a>'
-        )
-        return HTMLResponse(html)
-    return HTMLResponse('<a href="/login">login</a>')
+    # user = None
+    # try:
+    #     user = await auth_google(request.session.get('user')) # client side is frontend(React). so we have to validate user by other method.
+    # except Exception:
+    #     pass
+
+
+    # token_val = token_validation(request)
+    # if token_val['validation']:
+    #     pass
+    return token_validation(request)
+
+
+
 
 @router.get('/login')
 async def login(request: Request):
@@ -121,18 +141,30 @@ async def auth(request: Request, db: Session = Depends(get_db)):
     try:
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as error:
-        return {'error': 'authorization error'}
+        return {
+                'validation': False,
+                'message': 'authorization error'
+                }
     
     user = token.get('userinfo')
     if user:
         # 성결대 이메일만 로그인할 수 있도록
         if user['hd'] != "sungkyul.ac.kr":
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized email domain.")
+            return {
+                    'validation': False,
+                    'message': 'Unauthorized'
+                    }
+        #HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized email domain.")
         # 로그인한 유저 정보를 세션에 할당
         # request.session['user'] = token['id_token'] # have to return JSON to Client side(React)
-        _user['email'] = user['email']
-        expire_time = datetime.utcnow() + timedelta(hours=10) # korean time + 1hour
-        _user['expire'] = expire_time.strftime("%Y-%m-%d %H:%M:%S")
+
+        expire_time_raw = datetime.utcnow() + timedelta(hours=10) # korean time + 1hour
+        expire_time = expire_time_raw.strftime("%Y-%m-%d %H:%M:%S")
+        _user = {
+                'email': user['email'],
+                'expire': expire_time
+            }
+        
         encoded_jwt = jwt.encode(_user, os.environ["JWT_KEY"], 'HS256')
 
         existing_user = await user_crud.get_user(db, user['email'])
@@ -146,8 +178,11 @@ async def auth(request: Request, db: Session = Depends(get_db)):
 
             db.add(new_user)
             db.commit()
-
-        
+        else:
+            existing_user.session = encoded_jwt
+            db.add(existing_user)
+            db.commit()
+    
     return {'token': encoded_jwt}
 
 @router.post('/logout')
