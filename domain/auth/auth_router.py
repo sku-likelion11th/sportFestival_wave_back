@@ -34,6 +34,7 @@
 
 
 
+from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
@@ -138,22 +139,27 @@ async def login(request: Request):
 
 @router.get('/auth')
 async def auth(request: Request, db: Session = Depends(get_db)):
+    redirect_url = 'http://127.0.0.1:3000/login/callback'
     try:
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as error:
-        return {
-                'validation': False,
-                'message': 'authorization error'
-                }
+        error_json = {
+            'validation': False,
+            'message': 'authorization error'
+        }
+        error_json = json.dumps(error_json)
+        return RedirectResponse(url=f'{redirect_url}?error={error_json}')
     
     user = token.get('userinfo')
     if user:
         # 성결대 이메일만 로그인할 수 있도록
-        if user['hd'] != "sungkyul.ac.kr":
-            return {
-                    'validation': False,
-                    'message': 'Unauthorized'
-                    }
+        if user not in ['hd'] or user['hd'] != "sungkyul.ac.kr":
+            error_json = {
+                'validation': False,
+                'message': 'Unauthorized'
+            }
+            error_json = json.dumps(error_json)
+            return RedirectResponse(url=f'{redirect_url}?error={error_json}')
         #HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized email domain.")
         # 로그인한 유저 정보를 세션에 할당
         # request.session['user'] = token['id_token'] # have to return JSON to Client side(React)
@@ -183,7 +189,7 @@ async def auth(request: Request, db: Session = Depends(get_db)):
             db.add(existing_user)
             db.commit()
     
-    return {'token': encoded_jwt}
+    return RedirectResponse(url=f'{redirect_url}?token={encoded_jwt}')
 
 @router.post('/logout')
 async def logout(user_token: str , db: Session = Depends(get_db)): # have to send session data to backend (from front(React)) # request: Request
