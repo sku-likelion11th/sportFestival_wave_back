@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+import uvicorn
 from domain.auth import auth_router
 from domain.user import user_router
 from domain.game import game_router
@@ -33,3 +34,6 @@ app.include_router(auth_router.router)
 app.include_router(user_router.router)
 app.include_router(game_router.router)
 # app.include_router(major_router.router)
+
+# if __name__ == "__main__":
+# 	uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
