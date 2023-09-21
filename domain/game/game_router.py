@@ -38,7 +38,7 @@ async def game_status_change(request: Request, category:str, game_score: game_sc
 
 
 @router.post('/predict')
-async def logout(body: game_schema.Body, token: str = Depends(auth_router.oauth2_schema), db: Session = Depends(get_db)): # have to send session data to backend (from front(React)) # request: Request
+async def match_predict(body: game_schema.Body, token: str = Depends(auth_router.oauth2_schema), db: Session = Depends(get_db)): # have to send session data to backend (from front(React)) # request: Request
     res = auth_router.token_validation(token)
     if not res.validation:
         return {
