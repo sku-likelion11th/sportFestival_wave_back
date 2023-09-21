@@ -30,6 +30,7 @@ router = APIRouter(
 #     return user
 
 from domain.auth.auth_router import auth_google
+from domain.auth import auth_router
 
 @router.post('/info')
 async def user_change(request: Request, user_data: user_schema.User, db: Session = Depends(get_db)):
@@ -100,13 +101,17 @@ async def winpr_ratio(category:str, db: Session = Depends(get_db)):
     return result
 
 
-async def is_admin(db, token:str):
-    user = await auth_google(token)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인안함")
-    userdb = await user_crud.get_user(db,user['email'])
-    if userdb:
-        return userdb.is_admin
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="사용자를 찾을 수 없음")
+async def is_admin(db, token: str = Depends(auth_router.oauth2_schema)):
+    res = auth_router.token_validation(token)
+    if not res.validation:
+        return {
+                'validation': False, 
+                'message': 'token error'
+                }
+    
+    user = await user_crud.get_user(db, res.message['email'])
 
+    if user.is_admin:
+        return {'is_admin': True}
+    else:
+        return {'is_admin': False}

@@ -34,6 +34,6 @@ class Game_score(BaseModel):
 
 
 class Body(BaseModel):
-    title: str
+    category: str
     predict: int
 

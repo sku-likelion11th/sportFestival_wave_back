@@ -47,7 +47,7 @@ async def match_predict(body: game_schema.Body, token: str = Depends(auth_router
                 }
     
     user = await user_crud.get_user(db, res.message['email'])
-    user.game[body.title] = body.predict # erase user.session
+    user.game[body.category] = body.predict # erase user.session
     db.add(user)
     db.commit()
 
