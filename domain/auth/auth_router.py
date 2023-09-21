@@ -68,7 +68,7 @@ oauth.register(
     }
 )
 
-
+oauth2_schema = OAuth2PasswordBearer(tokenUrl='/token')
 
 @router.get('/google')
 async def auth_google(token:str): # not router but function?
@@ -85,26 +85,32 @@ async def decode_jwt(token: str):
     return payload
 
 @router.get('/validation')
-async def token_validation(request: Request, db: Session = Depends(get_db)): # have to use every each function
-    token = request.session.get('token')
+async def token_validation(token: str = Depends(oauth2_schema), db: Session = Depends(get_db)): # have to use every each function
     if token:
-        payload = await decode_jwt(token)
-        user = await user_crud.get_user(db, payload['email'])
-        if user:
-            if datetime.now() <= user['expire']:
-                # data = json.dumps(user)
-                return {
-                        'validation': True
-                        }
+        try:
+            payload = await decode_jwt(token)
+            email = payload['email']
+            user = await user_crud.get_user(db, email)
+            if user:
+                if datetime.now() <= datetime.strptime(payload["expire"], "%Y-%m-%d %H:%M:%S"):
+                    # data = json.dumps(user)
+                    return {
+                            'validation': True
+                            }
+                else:
+                    return {
+                            'validation': False,
+                            'message': 'expired'
+                            }
             else:
                 return {
-                        'validation': False,
-                        'message': 'expired'
+                        'validation': False, 
+                        'message': 'no data'
                         }
-        else:
+        except:
             return {
                     'validation': False, 
-                    'message': 'no data'
+                    'message': 'token error'
                     }
     else:
         return {
@@ -153,13 +159,22 @@ async def auth(request: Request, db: Session = Depends(get_db)):
     user = token.get('userinfo')
     if user:
         # 성결대 이메일만 로그인할 수 있도록
-        if user not in ['hd'] or user['hd'] != "sungkyul.ac.kr":
+        try:
+            if user['hd'] != "sungkyul.ac.kr":
+                error_json = {
+                    'validation': False,
+                    'message': 'Unauthorized'
+                }
+                error_json = json.dumps(error_json)
+                return RedirectResponse(url=f'{redirect_url}?error={error_json}')
+        except:
             error_json = {
-                'validation': False,
-                'message': 'Unauthorized'
-            }
+                    'validation': False,
+                    'message': 'Unauthorized email domain.'
+                }
             error_json = json.dumps(error_json)
             return RedirectResponse(url=f'{redirect_url}?error={error_json}')
+
         #HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized email domain.")
         # 로그인한 유저 정보를 세션에 할당
         # request.session['user'] = token['id_token'] # have to return JSON to Client side(React)
