@@ -95,7 +95,8 @@ async def token_validation(token: str = Depends(oauth2_schema), db: Session = De
                 if datetime.now() <= datetime.strptime(payload["expire"], "%Y-%m-%d %H:%M:%S"):
                     # data = json.dumps(user)
                     return {
-                            'validation': True
+                            'validation': True,
+                            'message': payload
                             }
                 else:
                     return {
@@ -192,10 +193,14 @@ async def auth(request: Request, db: Session = Depends(get_db)):
         
         if not existing_user:
             new_user = User(email=user['email'], name=user['name'], session=encoded_jwt)
-            # new_user.games = { # insert games(JSON) like this.
-            #     "soccor": None,
-            #     "basketball": None
-            # }
+            new_user.games = { # insert games(JSON) like this.
+                "축구": "no_data",
+                "농구": "no_data",
+                "손족구": "no_data",
+                "발야구": "no_data",
+                "족구": "no_data",
+                "피구": "no_data"
+            }
 
             db.add(new_user)
             db.commit()

@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from domain.game import game_schema, game_crud
+from domain.auth import auth_router
 from models import Game
 from starlette.requests import Request
-from domain.user import user_router
+from domain.user import user_router, user_crud
 
 router = APIRouter(
     prefix="/game",
@@ -35,3 +36,22 @@ async def game_status_change(request: Request, category:str, game_score: game_sc
     db.refresh(game)
     return game
 
+
+@router.post('/predict')
+async def logout(title: Depends(auth_router.oauth2_schema), predict: Depends(auth_router.oauth2_schema), token: Depends(auth_router.oauth2_schema), db: Session = Depends(get_db)): # have to send session data to backend (from front(React)) # request: Request
+    res = auth_router.token_validation(token)
+    if not res.validation:
+        return {
+                'validation': False, 
+                'message': 'token error'
+                }
+    
+    user = await user_crud.get_user(db, res.message['email'])
+    user.game[title] = predict # erase user.session
+    db.add(user)
+    db.commit()
+
+    return {
+        'validation': True, 
+        'message': 'predict success'
+        }
