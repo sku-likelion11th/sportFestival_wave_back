@@ -18,7 +18,7 @@ router = APIRouter(
     prefix="/admin",
 )
 
-@router.post('/modify')
+@router.post('/modify') # admin page score modify function
 async def admin_modify(body: admin_schema.Body, token: str = Depends(auth_router.oauth2_schema), db: Session = Depends(get_db)):
     res = user_router.is_admin(token)
     if not res['is_admin']:
@@ -27,4 +27,21 @@ async def admin_modify(body: admin_schema.Body, token: str = Depends(auth_router
                 'message': 'no admin'
                 }
 
+    game = await game_crud.get_game(db, body.category)
+    if body.result == "done":
+        game.result = True
+        return {
+            'validation': True, 
+            'message': 'end game'}
+
+    if body.team == 'A': # team_A
+        game.score_A = body.score
+    else:
+        game.score_B = body.score
     
+    db.add(game)
+    db.commit()
+
+    return {
+        'validation': True, 
+        'message': 'modified'}

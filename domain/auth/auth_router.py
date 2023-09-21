@@ -222,5 +222,7 @@ async def logout(user_token: str , db: Session = Depends(get_db)): # have to sen
     db.add(user)
     db.commit()
 
-    return {'message': 'logged out'}
+    return {
+        'validation': True, 
+        'message': 'logged out'}
 
