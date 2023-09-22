@@ -4,13 +4,14 @@ from sqlalchemy.orm.attributes import flag_modified
 from database import get_db
 from domain.user import user_schema, user_crud, user_router
 from domain.auth import auth_router
-from domain.game import game_schema
+from domain.game import game_schema, game_crud
 from models import User
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from starlette.requests import Request
 from starlette.config import Config
 from starlette.responses import HTMLResponse, RedirectResponse
 import json
+from datetime import datetime, timedelta
 
 router = APIRouter(
     prefix="/user",
@@ -80,6 +81,12 @@ async def user_game(body: game_schema.Body, request: str = Depends(auth_router.t
     if not request['validation']:
         return request
     
+    game = await game_crud.get_game(db, body.category)
+    if game.start_time - timedelta(minutes=10) <= datetime.now():
+        return {
+            "validation": False,
+            "message":"predict impossible. time over"}
+
     user = await user_crud.get_user(db, request['message']['email'])
 
     if not user:
@@ -87,7 +94,9 @@ async def user_game(body: game_schema.Body, request: str = Depends(auth_router.t
 
     if user:
         if (not user.student_num) or (not user.phone_num):
-            return {"message":"edit your info for trying predict"}
+            return {
+                "validation": False,
+                "message":"edit your info for trying predict"}
         user.games[body.category] = body.predict
         flag_modified(user, "games")
         db.add(user)

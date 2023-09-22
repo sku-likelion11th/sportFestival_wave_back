@@ -7,7 +7,7 @@ import os
 dotenv_file = dotenv.find_dotenv()
 dotenv.load_dotenv(dotenv_file)
 
-DB_URL = f'mysql://{os.environ["USERNAME"]}:{os.environ["PASSWORD"]}@{os.environ["HOST"]}:{os.environ["PORT"]}/{os.environ["DATABASE"]}'
+DB_URL = f'mysql://{os.environ["_USERNAME"]}:{os.environ["PASSWORD"]}@{os.environ["HOST"]}:{os.environ["PORT"]}/{os.environ["DATABASE"]}'
 
 # DB_URL = "sqlite:///./myapi.db"
 # engine = create_engine(
