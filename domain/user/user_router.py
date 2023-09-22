@@ -34,7 +34,10 @@ from domain.auth.auth_router import auth_google
 from domain.auth import auth_router
 
 @router.post('/info')
-async def user_change(user_data: user_schema.User,request: str = Depends(auth_router.token_validation), db: Session = Depends(get_db)):
+async def user_change(user_data: user_schema.User, request: str = Depends(auth_router.token_validation), db: Session = Depends(get_db)):
+    if not request['validation']:
+        return request
+    
     user = await user_crud.get_user(db, request['message']['email'])
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="not logged in")
@@ -48,7 +51,10 @@ async def user_change(user_data: user_schema.User,request: str = Depends(auth_ro
     
     
 @router.get('/info') #, response_model=list[user_schema.User]):
-async def user_info(request: str = Depends(auth_router.token_validation), db: Session = Depends(get_db)) -> user_schema.User:
+async def user_info(request: str = Depends(auth_router.token_validation), db: Session = Depends(get_db)):
+    if not request['validation']:
+        return request
+    
     user = await user_crud.get_user(db, request['message']['email'])
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="not logged in")
@@ -88,57 +94,59 @@ async def user_game(body: game_schema.Body, request: str = Depends(auth_router.t
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
 
 
-def cal_percentage(val1, val2):
-    total = val1 + val2
-    p1 = (val1 / max(total, 1)) * 100
-    p2 = (val2 / max(total, 1)) * 100
+# def cal_percentage(val1, val2): # move to game_router
+#     total = val1 + val2
+#     p1 = (val1 / max(total, 1)) * 100
+#     p2 = (val2 / max(total, 1)) * 100
 
-    return [p1, p2]
+#     if p1 == p2 == 0:
+#         return [50, 50]
+    
+#     return [p1, p2]
 
     
-@router.get('/ratio/{category}')
-async def winpr_ratio(category:str, db: Session = Depends(get_db)):
-    users = await user_crud.get_user_list(db)
-    a_cnt, b_cnt = 0, 0
-    for user in users:
-        if user.games[category] != None:
-            if user.games[category]:
-                a_cnt += 1
-            else:
-                b_cnt += 1
+# @router.get('/ratio/{category}')
+# async def winpr_ratio(category:str, db: Session = Depends(get_db)):
+#     users = await user_crud.get_user_list(db)
+#     a_cnt, b_cnt = 0, 0
+#     for user in users:
+#         if user.games[category] != None:
+#             if user.games[category]:
+#                 a_cnt += 1
+#             else:
+#                 b_cnt += 1
 
-    result = {}
-    res = cal_percentage(a_cnt, b_cnt)
-    if res[0] == res[1] == 0:
-        result['A'] = 50
-        result['B'] = 50
+#     result = {}
+#     res = cal_percentage(a_cnt, b_cnt)
+#     result['A'] = res[0]
+#     result['B'] = res[1]
 
-        return result
-    
-    result['A'] = res[0]
-    result['B'] = res[1]
-
-    return result
+#     return result
 
 
-async def is_admin(token: str = Depends(auth_router.oauth2_schema), db: Session = Depends(get_db)):
-    res = auth_router.token_validation(token)
-    if not res.validation:
+async def is_admin(db: Session = Depends(get_db), res: dict = Depends(auth_router.token_validation)):
+    if not res['validation']:
         return {
                 'validation': False, 
                 'message': 'token error'
                 }
     
-    user = await user_crud.get_user(db, res.message['email'])
-
+    user = await user_crud.get_user(db, res['message']['email'])
     if user.is_admin:
-        return {'is_admin': True}
+        return {
+            'validation': True, 
+            'is_admin': True}
     else:
-        return {'is_admin': False}
+        return {
+            'validation': False, 
+            'is_admin': False}
 
 
 @router.get('/valid')
 async def number_valid(request: str = Depends(auth_router.token_validation), db: Session = Depends(get_db)):
+    if not request['validation']:
+        return request
+    
     user = await user_crud.get_user(db, request['message']['email'])
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="not logged in")
