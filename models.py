@@ -13,7 +13,7 @@ class User(Base):
     is_admin = Column(Boolean, nullable=False, default=False)
     games = Column(JSON, nullable=True)
 
-    session = Column(Text, nullable=True)
+    # session = Column(Text, nullable=True)
     
 
 class Game(Base):
