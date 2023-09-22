@@ -137,7 +137,7 @@ async def is_admin(token: str = Depends(auth_router.oauth2_schema), db: Session 
         return {'is_admin': False}
 
 
-@router.post('/valid')
+@router.get('/valid')
 async def number_valid(request: str = Depends(auth_router.token_validation), db: Session = Depends(get_db)):
     user = await user_crud.get_user(db, request['message']['email'])
     if not user:
