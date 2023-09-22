@@ -6,15 +6,11 @@ from domain.auth import auth_router
 from models import Game
 from starlette.requests import Request
 from domain.user import user_router, user_crud
+from datetime import datetime, timedelta
 
 router = APIRouter(
     prefix="/game",
 )
-
-major = {
-    "컴공" : "컴공image_url"
-}
-
 
 @router.get("/list")
 async def game_dict(db: Session = Depends(get_db)):
@@ -50,6 +46,22 @@ async def game_status_change(category:str, game_score: game_schema.Game_score, r
     return game
 
 
+@router.post('/start/{category}')
+async def game_start(category:str, time:datetime, request: str = Depends(user_router.is_admin), db: Session = Depends(get_db)):
+    if not request['validation']:
+        return {
+            'validation': False,
+            "message": "anauthorized"}
+
+    game = await game_crud.get_game(db, category)
+    if game == None:
+        return {'message': "ended game can not edit more"}
+    
+    await game_crud.start(db, game, time)
+    db.refresh(game)
+    return game
+
+
 def cal_percentage(val1, val2):
     total = val1 + val2
     p1 = (val1 / max(total, 1)) * 100
@@ -71,7 +83,6 @@ async def winpr_ratio(category:str, db: Session = Depends(get_db)):
                 a_cnt += 1
             else:
                 b_cnt += 1
-
     result = {}
     res = cal_percentage(a_cnt, b_cnt)
     result['A'] = res[0]

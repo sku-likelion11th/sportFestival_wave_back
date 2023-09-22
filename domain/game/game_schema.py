@@ -6,6 +6,7 @@ from typing import Optional
 
 class Game(BaseModel):
     category: str
+    is_start : bool
     start_time: datetime.datetime
     result: bool 
     video_url: str         

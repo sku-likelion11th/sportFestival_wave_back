@@ -77,7 +77,7 @@ async def user_game(request: str = Depends(auth_router.token_validation), db:Ses
     
 
 @router.post('/game')
-async def user_game(body: game_schema.Body, request: str = Depends(auth_router.token_validation), db:Session = Depends(get_db)):
+async def user_game_change(body: game_schema.Body, request: str = Depends(auth_router.token_validation), db:Session = Depends(get_db)):
     if not request['validation']:
         return request
     

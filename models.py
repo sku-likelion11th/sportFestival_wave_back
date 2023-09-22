@@ -20,6 +20,7 @@ class Game(Base):
     __tablename__ = 'game'
     
     category = Column(String(255), primary_key=True)
+    is_start = Column(Boolean, nullable=False, default=False)
     start_time = Column(DateTime, nullable=True)
     result = Column(Integer, nullable=True)
     video_url = Column(String(255), nullable=True)           
@@ -29,13 +30,3 @@ class Game(Base):
     team_A = Column(String(255), nullable=False)
     team_B = Column(String(255), nullable=False)
 
-    
-    
-
-class Major(Base):
-    __tablename__ = 'major'
-    
-    id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)
-    slogan = Column(Text, nullable=False)
-    image = Column(Text, nullable=False) # How to show the image(by statics?)
