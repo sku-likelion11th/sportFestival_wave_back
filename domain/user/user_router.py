@@ -63,13 +63,16 @@ async def user_info(request: str = Depends(auth_router.token_validation), db: Se
 
     
 
-# @router.get('/game') # i think user/info url can displace this functions
-# async def user_game(request: str = Depends(auth_router.token_validation), db:Session = Depends(get_db)):
-#     user = await user_crud.get_user(db, request['message']['email'])
-#     if not user:
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="not logged in")
-#     else:
-#         return user.games
+@router.get('/game') # i think user/info url can displace this functions
+async def user_game(request: str = Depends(auth_router.token_validation), db:Session = Depends(get_db)):
+    if not request['validation']:
+        return request
+    
+    user = await user_crud.get_user(db, request['message']['email'])
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="not logged in")
+    else:
+        return user.games
     
 
 @router.post('/game')
