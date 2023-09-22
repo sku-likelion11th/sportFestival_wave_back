@@ -38,10 +38,12 @@ async def game_status_change(category:str, game_score: game_schema.Game_score, r
     
     
     game = await game_crud.get_game(db, category)
-    if game.result != None:
-        return {'message': "ended game can not edit more"}
+    if game.is_start == False:
+        return {'message': "not in the middle of the game"}
     
     await game_crud.change_game(db, game, game_score)
+    if game.result != None:
+        await game_crud.start(db, game, False, None)
     db.refresh(game)
     return game
 
@@ -55,9 +57,9 @@ async def game_start(category:str, time:datetime, request: str = Depends(user_ro
 
     game = await game_crud.get_game(db, category)
     if game == None:
-        return {'message': "ended game can not edit more"}
+        return {'message': "no such game"}
     
-    await game_crud.start(db, game, time)
+    await game_crud.start(db, game, True, time)
     db.refresh(game)
     return game
 
