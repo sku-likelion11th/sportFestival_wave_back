@@ -4,12 +4,12 @@ from pydantic import BaseModel, validator
 
 
 class User(BaseModel):
-    email: str 
-    student_num: str
-    name: str 
-    phone_num: str 
-    is_admin: bool 
-    games: Dict[str, Any] = {}
+    email: str = None
+    student_num: Any = None
+    name: str = None
+    phone_num: Any = None
+    is_admin: bool = None
+    games: Dict = None
     
     class Config:
         from_attribute = True

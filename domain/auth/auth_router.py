@@ -99,21 +99,25 @@ async def token_validation(token: str = Depends(oauth2_schema), db: Session = De
                             'message': payload
                             }
                 else:
+                    #return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="token has expired")
                     return {
                             'validation': False,
                             'message': 'expired'
                             }
             else:
+                #return HTTPException(status_code=status.HTTP_404_UNAUTHORIZED, detail="no user found")
                 return {
                         'validation': False, 
                         'message': 'no data'
                         }
         except:
+            #return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="token error")
             return {
                     'validation': False, 
                     'message': 'token error'
                     }
     else:
+        #return HTTPException(status_code=status.HTTP_404_UNAUTHORIZED, detail="not logged in")
         return {
                 'validation': False, 
                 'message': 'not logged in'
@@ -194,12 +198,12 @@ async def auth(request: Request, db: Session = Depends(get_db)):
         if not existing_user:
             new_user = User(email=user['email'], name=user['name'], session=encoded_jwt)
             new_user.games = { # insert games(JSON) like this.
-                "축구": "no_data",
-                "농구": "no_data",
-                "손족구": "no_data",
-                "발야구": "no_data",
-                "족구": "no_data",
-                "피구": "no_data"
+                "축구": None,
+                "농구": None,
+                "손족구": None,
+                "발야구": None,
+                "족구": None,
+                "피구": None
             }
 
             db.add(new_user)
@@ -208,15 +212,14 @@ async def auth(request: Request, db: Session = Depends(get_db)):
             existing_user.session = encoded_jwt
             db.add(existing_user)
             db.commit()
-    
     return RedirectResponse(url=f'{redirect_url}?token={encoded_jwt}')
 
-@router.post('/logout')
-async def logout(user_token: str , db: Session = Depends(get_db)): # have to send session data to backend (from front(React)) # request: Request
+@router.post('/logout') # no use
+async def logout(token: str , db: Session = Depends(get_db)): # have to send session data to backend (from front(React)) # request: Request
     # 세션에서 유저 정보 삭제
     # request.session.pop('user', None)
     # user_token = request.session.get('token')
-    user_info = await decode_jwt(user_token)
+    user_info = await decode_jwt(token)
     user = await user_crud.get_user(db, user_info['email'])
     user.session = '' # erase user.session
     db.add(user)

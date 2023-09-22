@@ -20,12 +20,12 @@ class Game(Base):
     __tablename__ = 'game'
     
     category = Column(String(255), primary_key=True)
-    start_time = Column(DateTime, nullable=False)
-    result = Column(Boolean, nullable=True)
+    start_time = Column(DateTime, nullable=True)
+    result = Column(Integer, nullable=True)
     video_url = Column(String(255), nullable=True)           
     score_A = Column(Integer)    
     score_B = Column(Integer)  
-    place = Column(String(255), nullable=False)
+    place = Column(String(255), nullable=True)
     team_A = Column(String(255), nullable=False)
     team_B = Column(String(255), nullable=False)
 
