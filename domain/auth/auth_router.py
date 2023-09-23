@@ -198,12 +198,12 @@ async def auth(request: Request, db: Session = Depends(get_db)):
         if not existing_user:
             new_user = User(email=user['email'], name=user['name'])#, session=encoded_jwt)
             new_user.games = { # insert games(JSON) like this.
-                "축구": None,
-                "농구": None,
-                "손족구": None,
-                "발야구": None,
-                "족구": None,
-                "피구": None
+                "soccer": None,
+                "basketball": None,
+                "handball": None,
+                "kickbaseball": None,
+                "football": None,
+                "dodgeball": None
             }
 
             db.add(new_user)
