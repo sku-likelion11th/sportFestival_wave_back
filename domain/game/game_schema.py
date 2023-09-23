@@ -34,6 +34,11 @@ class Game_score(BaseModel):
     score_B: int 
 
 
+class Game_start(BaseModel):    
+    category: str  
+    time: datetime.datetime
+
+
 class Body(BaseModel):
     category: str
     predict: int

@@ -23,11 +23,8 @@ async def change_game(db: Session, game:Game, game_score:game_schema.Game_score)
     db.commit()
     return game
 
-async def start(db: Session, game:Game, is_start:bool, time: datetime):
-    if is_start:
-        game.is_start = True
-        game.start_time = time
-    else:
-        game.is_start = False
+async def start(db: Session, game:Game, time: datetime):
+    game.is_start = True
+    game.start_time = time
     db.commit()
     return game

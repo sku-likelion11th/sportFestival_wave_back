@@ -38,28 +38,24 @@ async def game_status_change(category:str, game_score: game_schema.Game_score, r
     
     
     game = await game_crud.get_game(db, category)
-    if game.is_start == False:
-        return {'message': "not in the middle of the game"}
     
     await game_crud.change_game(db, game, game_score)
-    if game.result != None:
-        await game_crud.start(db, game, False, None)
     db.refresh(game)
     return game
 
 
 @router.post('/start/{category}')
-async def game_start(category:str, time:datetime, request: str = Depends(user_router.is_admin), db: Session = Depends(get_db)):
+async def game_start(time: game_schema.Game_start, request: str = Depends(user_router.is_admin), db: Session = Depends(get_db)):
     if not request['validation']:
         return {
             'validation': False,
             "message": "anauthorized"}
-
-    game = await game_crud.get_game(db, category)
+    
+    game = await game_crud.get_game(db, time.category)
     if game == None:
         return {'message': "no such game"}
     
-    await game_crud.start(db, game, True, time)
+    await game_crud.start(db, game, time.time)
     db.refresh(game)
     return game
 
