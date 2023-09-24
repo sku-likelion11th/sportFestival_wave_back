@@ -31,12 +31,6 @@ async def game_status_change(category:str, game_score: game_schema.Game_score, r
             'validation': False,
             "message": "anauthorized"}
     
-    # if not await user_router.is_admin(db, request['is_admin']):
-    #     return {
-    #         'validation': False,
-    #         "message": "anauthorized"}
-    
-    
     game = await game_crud.get_game(db, category)
     
     await game_crud.change_game(db, game, game_score)
@@ -87,24 +81,3 @@ async def winpr_ratio(category:str, db: Session = Depends(get_db)):
     result['B'] = res[1]
 
     return result
-
-
-
-# @router.post('/predict')
-# async def match_predict(body: game_schema.Body, token: str = Depends(auth_router.oauth2_schema), db: Session = Depends(get_db)): # have to send session data to backend (from front(React)) # request: Request
-#     res = auth_router.token_validation(token)
-#     if not res.validation:
-#         return {
-#                 'validation': False, 
-#                 'message': 'token error'
-#                 }
-    
-#     user = await user_crud.get_user(db, res.message['email'])
-#     user.game[body.category] = body.predict # erase user.session
-#     db.add(user)
-#     db.commit()
-
-#     return {
-#         'validation': True, 
-#         'message': 'predict success'
-#         }

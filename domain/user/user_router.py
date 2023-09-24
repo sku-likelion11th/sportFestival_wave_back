@@ -17,19 +17,6 @@ router = APIRouter(
     prefix="/user",
 )
 
-# # don't use
-# @router.get("/list")
-# def user_list(db: Session = Depends(get_db), response_model=list[user_schema.User]):
-#     _user_list = user_crud.get_user_list(db)
-#     return _user_list
-
-# # don't use
-# @router.get("/detail/{user_id}", response_model=user_schema.User)
-# def user_detail(user_id: int, db: Session = Depends(get_db)):
-#     user = user_crud.get_user_by_id(db, user_id=user_id)
-#     if user is None:
-#         return HTMLResponse('no_user_detail')#RedirectResponse(url='/')
-#     return user
 
 from domain.auth.auth_router import auth_google
 from domain.auth import auth_router
@@ -60,7 +47,7 @@ async def user_info(request: str = Depends(auth_router.token_validation), db: Se
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="not logged in")
 
-    return user.__dict__ # 모든 column 출력
+    return user.__dict__
 
     
 
@@ -104,36 +91,6 @@ async def user_game_change(body: game_schema.Body, request: str = Depends(auth_r
         return user.games
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
-
-
-# def cal_percentage(val1, val2): # move to game_router
-#     total = val1 + val2
-#     p1 = (val1 / max(total, 1)) * 100
-#     p2 = (val2 / max(total, 1)) * 100
-
-#     if p1 == p2 == 0:
-#         return [50, 50]
-    
-#     return [p1, p2]
-
-    
-# @router.get('/ratio/{category}')
-# async def winpr_ratio(category:str, db: Session = Depends(get_db)):
-#     users = await user_crud.get_user_list(db)
-#     a_cnt, b_cnt = 0, 0
-#     for user in users:
-#         if user.games[category] != None:
-#             if user.games[category]:
-#                 a_cnt += 1
-#             else:
-#                 b_cnt += 1
-
-#     result = {}
-#     res = cal_percentage(a_cnt, b_cnt)
-#     result['A'] = res[0]
-#     result['B'] = res[1]
-
-#     return result
 
 
 async def is_admin(db: Session = Depends(get_db), res: dict = Depends(auth_router.token_validation)):
