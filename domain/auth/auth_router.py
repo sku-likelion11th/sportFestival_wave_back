@@ -150,7 +150,7 @@ async def login(request: Request):
 
 @router.get('/auth')
 async def auth(request: Request, db: Session = Depends(get_db)):
-    redirect_url = 'http://127.0.0.1:3000/login/callback'
+    redirect_url = 'http://wave-renew.sku-sku.com:3000/login/callback'
     try:
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as error:
